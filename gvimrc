@@ -1,3 +1,8 @@
+" Include user's local pre .gvimrc config
+if filereadable(expand("~/.gvimrc.pre"))
+  source ~/.gvimrc.pre
+endif
+
 if has("gui_macvim")
   " Fullscreen takes up entire screen
   set fuoptions=maxhorz,maxvert
@@ -56,11 +61,39 @@ if has("gui_macvim")
   imap <D-M-Right> <Esc> <C-w>l
   map <D-M-Left> <C-w>h
   imap <D-M-Left> <C-w>h
+else
+  " Ctrl-T for Command-T
+  map <C-t> :CommandT<CR>
+  imap <C-t> <Esc>:CommandT<CR>
 
-  " Adjust viewports to the same size
-  map <Leader>= <C-w>=
-  imap <Leader>= <Esc> <C-w>=
+  " Ctrl-Shift-F for Ack
+  map <C-F> :Ack<space>
+
+  " Ctrl-e for ConqueTerm
+  map <C-e> :call StartTerm()<CR>
+
+  " Alt-/ to toggle comments
+  map <A-/> <plug>NERDCommenterToggle<CR>
+  imap <A-/> <Esc><plug>NERDCommenterToggle<CR>i
+
+  " Alt-][ to increase/decrease indentation
+  vmap <A-]> >gv
+  vmap <A-[> <gv
+
+  " Ctrl-Option-ArrowKey to switch viewports
+  map <C-S-Up> <C-w>k
+  imap <C-S-Up> <Esc> <C-w>k
+  map <C-S-Down> <C-w>j
+  imap <C-S-Down> <Esc> <C-w>j
+  map <C-S-Right> <C-w>l
+  imap <C-S-Right> <Esc> <C-w>l
+  map <C-S-Left> <C-w>h
+  imap <C-S-Left> <C-w>h
 endif
+
+" Adjust viewports to the same size
+map <Leader>= <C-w>=
+imap <Leader>= <Esc> <C-w>=
 
 " Don't beep
 set visualbell
@@ -74,13 +107,16 @@ color ir_black
 " ConqueTerm wrapper
 function StartTerm()
   execute 'ConqueTerm ' . $SHELL . ' --login'
-  setlocal listchars=tab:\ \ 
+  setlocal listchars=tab:\ \
 endfunction
 
 " Project Tree
-autocmd VimEnter * call s:CdIfDirectory(expand("<amatch>"))
-autocmd FocusGained * call s:UpdateNERDTree()
-autocmd WinEnter * call s:CloseIfOnlyNerdTreeLeft()
+if exists("loaded_nerd_tree")
+  augroup AuNERDTreeCmd
+  autocmd AuNERDTreeCmd VimEnter * call s:CdIfDirectory(expand("<amatch>"))
+  autocmd AuNERDTreeCmd FocusGained * call s:UpdateNERDTree()
+  autocmd AuNERDTreeCmd WinEnter * call s:CloseIfOnlyNerdTreeLeft()
+endif
 
 " Close all open buffers on entering a window if the only
 " buffer that's left is the NERDTree buffer
@@ -105,7 +141,7 @@ function s:CdIfDirectory(directory)
 
   " Allows reading from stdin
   " ex: git diff | mvim -R -
-  if strlen(a:directory) == 0 
+  if strlen(a:directory) == 0
     return
   endif
 
@@ -218,11 +254,14 @@ RUBY
 endfunction
 
 " Define the NERDTree-aware aliases
-call s:DefineCommand("cd", "ChangeDirectory")
-call s:DefineCommand("touch", "Touch")
-call s:DefineCommand("rm", "Remove")
-call s:DefineCommand("e", "Edit")
-call s:DefineCommand("mkdir", "Mkdir")
+if exists("loaded_nerd_tree")
+  call s:DefineCommand("cd", "ChangeDirectory")
+  call s:DefineCommand("touch", "Touch")
+  call s:DefineCommand("rm", "Remove")
+  call s:DefineCommand("e", "Edit")
+  call s:DefineCommand("mkdir", "Mkdir")
+  cabbrev Edit! e!
+endif
 
 " Include user's local vim config
 if filereadable(expand("~/.gvimrc.local"))
